@@ -4,11 +4,9 @@ import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
-import org.keycloak.common.util.Time;
 import org.keycloak.cookie.CookieProvider;
 import org.keycloak.jose.jws.JWSInput;
 import org.keycloak.models.AuthenticatorConfigModel;
-import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
@@ -16,14 +14,13 @@ import org.keycloak.models.UserSessionModel;
 import org.keycloak.representations.AccessToken;
 
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.inventage.keycloak.timeout.authentication.RoleBasedTimeoutAuthenticatorFactory.ROLE_IDLE_TIMEOUTS;
 import static com.inventage.keycloak.timeout.authentication.RoleBasedTimeoutAuthenticatorFactory.ROLE_MAX_TIMEOUTS;
-import static java.lang.Integer.MAX_VALUE;
-import static java.lang.Integer.parseInt;
-import static java.util.Arrays.stream;
-import static java.util.Collections.emptyMap;
+import static com.inventage.keycloak.timeout.util.TimeoutValidator.isTimeoutReached;
+import static com.inventage.keycloak.timeout.util.TimeoutValidator.parseConfig;
+import static org.jboss.logging.Logger.getLogger;
+import static org.keycloak.common.util.Time.currentTime;
 import static org.keycloak.cookie.CookieType.IDENTITY;
 
 /**
@@ -41,7 +38,7 @@ import static org.keycloak.cookie.CookieType.IDENTITY;
  */
 public class RoleBasedTimeoutAuthenticator implements Authenticator {
 
-    private static final Logger logger = Logger.getLogger(RoleBasedTimeoutAuthenticator.class);
+    private static final Logger logger = getLogger(RoleBasedTimeoutAuthenticator.class);
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
@@ -82,7 +79,8 @@ public class RoleBasedTimeoutAuthenticator implements Authenticator {
         try {
             final JWSInput input = new JWSInput(cookieValue);
             return input.readJsonContent(AccessToken.class);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             logger.warn("Failed to parse identity cookie for timeout check.", e);
             return null;
         }
@@ -105,99 +103,7 @@ public class RoleBasedTimeoutAuthenticator implements Authenticator {
             return false;
         }
 
-        // Resolve limits for this user
-        final int userIdleLimit = resolveMinTimeout(user, idleTimeouts);
-        final int userMaxLimit = resolveMinTimeout(user, maxTimeouts);
-
-        // If user has no relevant roles for either, just pass
-        if (userIdleLimit == MAX_VALUE && userMaxLimit == MAX_VALUE) {
-            return false;
-        }
-
-        final int currentTime = Time.currentTime();
-
-        if (userMaxLimit != MAX_VALUE) {
-            final int absoluteAge = currentTime - userSession.getStarted();
-
-            if (absoluteAge > userMaxLimit) {
-                logger.infof("Role based max session limit of %ds exceeded for user '%s' (Age: %ds). Terminating.",
-                        userMaxLimit, user.getUsername(), absoluteAge);
-                return true;
-            }
-        }
-
-        // check idle timeout (based on cookie issuance timestamp)
-        if (userIdleLimit != MAX_VALUE) {
-            long tokenIat = token.getIat();
-            if (tokenIat <= 0) {
-                tokenIat = userSession.getStarted();
-            }
-
-            final long idleTime = currentTime - tokenIat;
-            if (idleTime > userIdleLimit) {
-                logger.infof("IDLE limit (%ds) reached for user '%s' (Idle: %ds).",
-                        userIdleLimit, user.getUsername(), idleTime);
-                return true;
-            }
-        }
-
-        logger.debugf("User '%s' checks passed. MaxLimit: %s, IdleLimit: %s.",
-                user.getUsername(),
-                (userMaxLimit == MAX_VALUE ? "None" : userMaxLimit),
-                (userIdleLimit == MAX_VALUE ? "None" : userIdleLimit));
-        return false;
-    }
-
-    /**
-     * Helper to parse the Keycloak "##" delimited config string into a Map.
-     *
-     * @param config the config.
-     * @param key the config key to parse.
-     * @return the role to timeout map.
-     */
-    private Map<String, Integer> parseConfig(Map<String, String> config, String key) {
-        final String value = config.get(key);
-        if (value == null || value.isBlank()) {
-            return emptyMap();
-        }
-        try {
-            return stream(value.split("##"))
-                    .map(s -> s.split(":", 2))
-                    .filter(a -> a.length == 2 && !a[0].isBlank() && !a[1].isBlank())
-                    .collect(Collectors.toMap(
-                            a -> a[0].trim(),
-                            a -> parseInt(a[1].trim()),
-                            (existing, replacement) -> existing
-                    ));
-        }
-        catch (NumberFormatException e) {
-            logger.warnf("Invalid format for config key %s. Ignoring.", key);
-            return emptyMap();
-        }
-    }
-
-    /**
-     * Helper to find the shortest timeout among the user's roles.
-     *
-     * @param user the user model.
-     * @param timeouts the role to timeout map.
-     * @return the timeout or fallback to max value.
-     */
-    private int resolveMinTimeout(UserModel user, Map<String, Integer> timeouts) {
-        if (timeouts.isEmpty()) {
-            return MAX_VALUE;
-        }
-        return user.getRoleMappingsStream()
-                .map(role -> {
-                    if (role.getContainer() instanceof ClientModel client) {
-                        return client.getClientId() + "/" + role.getName();
-                    }
-                    return role.getName();
-                })
-                .filter(timeouts::containsKey)
-                .mapToInt(timeouts::get)
-                .min()
-                .orElse(MAX_VALUE);
+        return isTimeoutReached(user, token.getIat(), currentTime(), idleTimeouts, maxTimeouts, userSession.getStarted());
     }
 
     private void terminateSession(AuthenticationFlowContext context, UserSessionModel userSession) {

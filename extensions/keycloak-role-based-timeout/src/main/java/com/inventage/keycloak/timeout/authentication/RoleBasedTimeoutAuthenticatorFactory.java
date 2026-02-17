@@ -51,7 +51,7 @@ public class RoleBasedTimeoutAuthenticatorFactory implements AuthenticatorFactor
 
     @Override
     public String getDisplayType() {
-        return "Role Based Session Idle and Max Timeouts";
+        return "Role Based Timeout Authenticator";
     }
 
     @Override

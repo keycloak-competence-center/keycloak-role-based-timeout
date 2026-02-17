@@ -1,61 +1,113 @@
 Keycloak role based session timeout extension
 ===
 
-The keycloak-role-based-timeout extension allows configuring lower session timeout for users with specified roles.
+The keycloak-role-based-timeout extension allows configuring lower session timeout for users with specified roles as authentication step for browser flows and required action for token refreshes.
 
+Both components are "fail-open"; if a configuration error occurs, it will allow the refresh or authentication step to proceed rather than locking users out.
+
+### Installation
 To install the extension add the jar to the Keycloak server:
 
 ```shell
 cp target/keycloak-role-based-timeout-<VERSION>.jar <KEYCLOAK_HOME>/providers/
 ```
 
-Upon successful installation the authenticator "Role Based Session Timeout" (`role-based-timeout-authenticator`) is available.
+Upon successful installation the authenticator "Role Based Timeout Authenticator" (`role-based-timeout-authenticator`) and the event listener `role-based-timeout-listener` are available.
+The authenticator step can be configured and the event listener uses the authenticator configuration. In case of multiple authenticator configurations for the realm, all are applied for the required action (thus the most restrictive configuration is used). Note, configurations from disabled authenticators are ignored.
 
-Configuration
----
+### Setup of the authenticator step
+1. Navigate to **Authentication** -> the flow used by **Browser flow** in the Admin Console.
+2. Create a basic flow subflow with requirement "ALTERNATIVE" replacing the "Cookie" execution step.
+3. Add the Cookie authenticator as first step in the subflow as "REQUIRED"
+4. Add the Role Based Timeout Authenticator as second step in the subflow as "REQUIRED".
+5. Configure the role based timeout authenticator step.
 
-The following snippet is an excerpt of a `realm.json` file using the new authenticator.
+### Setup of the event listener
+1. Navigate to **Realm Settings** -> **Events** in the Admin Console.
+2. Add `role-based-timeout-listener` to the Event Listeners dropdown.
+
+### Authenticator configuration
+
+The following snippet is an excerpt of a `realm.json` file using the  and required action
 
 ```json
 {
-    "authenticationFlows": [
+  "eventsListeners": [
+    "role-based-timeout-listener",
+    "jboss-logging"
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "browser2",
+      "description": "browser based authentication",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
         {
-            "alias": "browser-sms Browser - Conditional SMS",
-            "description": "Flow to determine if the SMS is required for the authentication",
-            "providerId": "basic-flow",
-            "topLevel": false,
-            "builtIn": false,
-            "authenticationExecutions": [
-                {
-                    "authenticator": "conditional-user-configured",
-                    "authenticatorFlow": false,
-                    "requirement": "REQUIRED",
-                    "priority": 10,
-                    "autheticatorFlow": false,
-                    "userSetupAllowed": false
-                },
-                {
-                    "authenticator": "sms-authenticator",
-                    "authenticatorConfig": "sms-authenticator",
-                    "authenticatorFlow": false,
-                    "requirement": "REQUIRED",
-                    "priority": 20,
-                    "autheticatorFlow": false,
-                    "userSetupAllowed": false
-                }
-            ]
+          "authenticatorFlow": true,
+          "flowAlias": "cookie & timeout",
+          "priority": 10,
+          "requirement": "ALTERNATIVE",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "auth-spnego",
+          "authenticatorFlow": false,
+          "requirement": "DISABLED",
+          "priority": 20,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "identity-provider-redirector",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 25,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "flowAlias": "browser2 forms",
+          "userSetupAllowed": false
         }
-    ],
-    "authenticatorConfig": [
+      ]
+    },
+    {
+      "alias": "cookie & timeout",
+      "authenticationExecutions": [
         {
-            "alias": "sms-authenticator",
-            "config": {
-                "sms-service-provider-id": "uniport-sms-service",
-                "sms-code-ttl": "60",
-                "sms-code-length": "4", 
-                "sms-show-phone-number": false
+          "authenticator": "auth-cookie",
+          "authenticatorFlow": false,
+          "priority": 0,
+          "requirement": "REQUIRED",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "role-based-timeout-authenticator",
+          "authenticatorConfig": "browserflow session and idle timeout config",
+          "authenticatorFlow": false,
+          "priority": 1,
+          "requirement": "REQUIRED",
+          "userSetupAllowed": false
+        }
+      ],
+      "builtIn": false,
+      "description": "",
+      "providerId": "basic-flow",
+      "topLevel": false
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "browserflow session and idle timeout config",
+      "config": {
+        "role-idle-timeouts": "offline_access:30",
+        "role-max-timeouts": "account/delete-account:120"
       }
     }
   ]
 }
 ```
+

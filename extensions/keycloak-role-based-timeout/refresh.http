@@ -1,0 +1,31 @@
+### 1. Get Access Token (Password Grant)
+# Replace placeholders with your actual client_id, username, and password or configure keycloak fittingly.
+POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&
+client_id=myclient&
+username=user1&
+password=user1...&
+scope=openid
+
+> {%
+    // Capture the refresh token for the next request
+    client.global.set("refresh_token", response.body.refresh_token);
+    client.log("Refresh Token captured: " + client.global.get("refresh_token"));
+%}
+
+### 2. Refresh Access Token
+# This request uses the refresh_token captured from the previous call and sets it again, so this call can be done repeatedly.
+POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&
+client_id=myclient&
+refresh_token={{refresh_token}}
+
+> {%
+    // Capture the refresh token for the next request
+    client.global.set("refresh_token", response.body.refresh_token);
+    client.log("Refresh Token captured: " + client.global.get("refresh_token"));
+%}

@@ -7,6 +7,10 @@
   "adminEventsDetailsEnabled": true,
   "eventsEnabled": true,
   "eventsExpiration": 259200,
+  "eventsListeners": [
+    "role-based-timeout-listener",
+    "jboss-logging"
+  ],
   "enabledEventTypes": [
     "AUTHREQID_TO_TOKEN",
     "AUTHREQID_TO_TOKEN_ERROR",
@@ -130,6 +134,13 @@
       "builtIn": false,
       "authenticationExecutions": [
         {
+          "authenticatorFlow": true,
+          "flowAlias": "cookie & timeout",
+          "priority": 10,
+          "requirement": "ALTERNATIVE",
+          "userSetupAllowed": false
+        },
+        {
           "authenticator": "auth-spnego",
           "authenticatorFlow": false,
           "requirement": "DISABLED",
@@ -148,13 +159,6 @@
           "requirement": "ALTERNATIVE",
           "priority": 30,
           "flowAlias": "browser2 forms",
-          "userSetupAllowed": false
-        },
-        {
-          "authenticatorFlow": true,
-          "flowAlias": "cookie & timeout",
-          "priority": 10,
-          "requirement": "ALTERNATIVE",
           "userSetupAllowed": false
         }
       ]
