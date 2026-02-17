@@ -139,4 +139,11 @@ public class RoleBasedTimeoutAuthenticator implements Authenticator {
     @Override
     public void close() {
     }
+
+    /**
+     * Default constructor.
+     */
+    public RoleBasedTimeoutAuthenticator() {
+        // no-op
+    }
 }

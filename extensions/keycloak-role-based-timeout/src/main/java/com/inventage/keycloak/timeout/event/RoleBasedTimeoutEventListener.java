@@ -36,6 +36,11 @@ public class RoleBasedTimeoutEventListener implements EventListenerProvider {
 
     private final KeycloakSession session;
 
+    /**
+     * Constructor.
+     *
+     * @param session the keycloak session.
+     */
     public RoleBasedTimeoutEventListener(KeycloakSession session) {
         this.session = session;
     }

@@ -4,13 +4,21 @@ import org.jboss.logging.Logger;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.UserModel;
 
-import java.util.Arrays;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Integer.parseInt;
+import static java.util.Arrays.stream;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Stream.empty;
 
+/**
+ * Util class to parse the timeout configuration and check whether a timeout was reached.
+ */
 public class TimeoutValidator {
 
     private static final Logger logger = Logger.getLogger(TimeoutValidator.class);
@@ -23,18 +31,29 @@ public class TimeoutValidator {
      * @return the role to timeout map.
      */
     public static Map<String, Integer> parseConfig(Map<String, String> config, String key) {
-        String value = config.get(key);
-        if (value == null || value.isBlank()) return emptyMap();
         try {
-            return Arrays.stream(value.split("##"))
+            final String value = config.get(key);
+            if (value == null || value.isBlank()) {
+                return emptyMap();
+            }
+            return stream(value.split("##"))
                     .map(s -> s.split(":", 2))
                     .filter(a -> a.length == 2 && !a[0].isBlank() && !a[1].isBlank())
-                    .collect(Collectors.toMap(
-                            a -> a[0].trim(),
-                            a -> Integer.parseInt(a[1].trim()),
-                            (a, b) -> a));
-        } catch (Exception e) {
-            logger.warnf("Invalid format for config key %s. Ignoring.", key);
+                    .flatMap(a -> {
+                        try {
+                            String roleName = a[0].trim();
+                            Integer timeout = parseInt(a[1].trim());
+                            return Stream.of(new SimpleEntry<>(roleName, timeout));
+                        } catch (NumberFormatException e) {
+                            logger.warnf("Invalid number format for role '%s' in config key %s. Ignoring.", a[0], key);
+                            return empty(); // Discards only this malformed segment
+                        }
+                    })
+                    .collect(toMap(Entry::getKey, Entry::getValue,
+                            (existing, replacement) -> existing)); // Handles duplicate roles by keeping the first
+        }
+        catch (Exception e) {
+            logger.warnf(e, "Unexpected error parsing config key %s. Falling back to empty map.", key);
             return emptyMap();
         }
     }
@@ -109,5 +128,9 @@ public class TimeoutValidator {
                 })
                 .filter(timeouts::containsKey)
                 .mapToInt(timeouts::get).min().orElse(MAX_VALUE);
+    }
+
+    private TimeoutValidator() {
+        // no-op
     }
 }

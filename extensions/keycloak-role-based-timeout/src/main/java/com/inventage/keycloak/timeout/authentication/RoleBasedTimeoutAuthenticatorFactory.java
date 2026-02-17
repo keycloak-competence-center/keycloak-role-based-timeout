@@ -15,19 +15,25 @@ import static java.util.Collections.unmodifiableList;
 import static org.keycloak.models.AuthenticationExecutionModel.Requirement.DISABLED;
 import static org.keycloak.models.AuthenticationExecutionModel.Requirement.REQUIRED;
 
+/**
+ * {@link AuthenticatorFactory} for {@link RoleBasedTimeoutAuthenticator}.
+ */
 public class RoleBasedTimeoutAuthenticatorFactory implements AuthenticatorFactory {
 
+    /** Provider ID. */
     public static final String PROVIDER_ID = "role-based-timeout-authenticator";
+    /** idle timeout configuration name. */
     public static final String ROLE_IDLE_TIMEOUTS = "role-idle-timeouts";
+    /** max timeout configuration name. */
     public static final String ROLE_MAX_TIMEOUTS = "role-max-timeouts";
 
     private static final List<ProviderConfigProperty> CONFIG_PROPERTIES;
 
     static {
-        List<ProviderConfigProperty> configProperties = new ArrayList<>();
+        final List<ProviderConfigProperty> configProperties = new ArrayList<>();
 
         // 1. Idle Timeout Config
-        ProviderConfigProperty idleProp = new ProviderConfigProperty();
+        final ProviderConfigProperty idleProp = new ProviderConfigProperty();
         idleProp.setName(ROLE_IDLE_TIMEOUTS);
         idleProp.setLabel("Role Based IDLE Timeouts");
         idleProp.setHelpText("Terminates session if user is inactive for X seconds. " +
@@ -37,7 +43,7 @@ public class RoleBasedTimeoutAuthenticatorFactory implements AuthenticatorFactor
         configProperties.add(idleProp);
 
         // 2. Max Timeout Config
-        ProviderConfigProperty maxProp = new ProviderConfigProperty();
+        final ProviderConfigProperty maxProp = new ProviderConfigProperty();
         maxProp.setName(ROLE_MAX_TIMEOUTS);
         maxProp.setLabel("Role Based MAX Timeouts");
         maxProp.setHelpText("Terminates session strictly after X seconds (Absolute limit). " +
@@ -107,5 +113,12 @@ public class RoleBasedTimeoutAuthenticatorFactory implements AuthenticatorFactor
     @Override
     public String getId() {
         return PROVIDER_ID;
+    }
+
+    /**
+     * Default constructor.
+     */
+    public RoleBasedTimeoutAuthenticatorFactory() {
+        // no-op
     }
 }

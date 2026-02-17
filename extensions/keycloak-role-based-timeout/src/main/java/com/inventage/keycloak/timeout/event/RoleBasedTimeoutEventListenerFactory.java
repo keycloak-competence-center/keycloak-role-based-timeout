@@ -6,6 +6,9 @@ import org.keycloak.events.EventListenerProviderFactory;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 
+/**
+ * {@link EventListenerProviderFactory} for {@link RoleBasedTimeoutEventListener}.
+ */
 public class RoleBasedTimeoutEventListenerFactory implements EventListenerProviderFactory {
 
     @Override
@@ -28,6 +31,12 @@ public class RoleBasedTimeoutEventListenerFactory implements EventListenerProvid
 
     @Override
     public void close() {
+    }
 
+    /**
+     * Default constructor.
+     */
+    public RoleBasedTimeoutEventListenerFactory() {
+        // no-op
     }
 }
