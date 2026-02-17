@@ -6,7 +6,7 @@
 
     <parent>
         <artifactId>parent</artifactId>
-        <groupId>com.inventage.keycloak.custom</groupId>
+        <groupId>com.inventage.keycloak.role-based-timeout</groupId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
@@ -15,17 +15,17 @@
     <dependencies>
         <!-- dependencies to be included in the container image -->
         <dependency>
-            <groupId>com.inventage.keycloak.custom</groupId>
+            <groupId>com.inventage.keycloak.role-based-timeout</groupId>
             <artifactId>config</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.inventage.keycloak.custom</groupId>
-            <artifactId>extension-no-op-authenticator</artifactId>
+            <groupId>com.inventage.keycloak.role-based-timeout</groupId>
+            <artifactId>keycloak-role-based-timeout</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.inventage.keycloak.custom</groupId>
+            <groupId>com.inventage.keycloak.role-based-timeout</groupId>
             <artifactId>themes</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -95,7 +95,7 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeGroupIds>com.inventage.keycloak.custom</includeGroupIds>
+                            <includeGroupIds>com.inventage.keycloak.role-based-timeout</includeGroupIds>
                             <includeArtifactIds>config</includeArtifactIds>
                             <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                         </configuration>
@@ -108,7 +108,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>extension-no-op-authenticator,themes</includeArtifactIds>
+                            <includeArtifactIds>keycloak-role-based-timeout</includeArtifactIds>
                             <outputDirectory>${project.build.outputDirectory}/keycloak/providers</outputDirectory>
                         </configuration>
                     </execution>

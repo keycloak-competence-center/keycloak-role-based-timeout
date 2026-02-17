@@ -1,7 +1,6 @@
 {
-  "id": "example1",
-  "realm": "example1",
-  "displayName": "$(env:EXAMPLE1_DISPLAY_NAME:-Example One)",
+  "id": "myrealm",
+  "realm": "myrealm",
   "enabled": true,
   "registrationAllowed": true,
   "adminEventsEnabled": true,
@@ -124,20 +123,12 @@
   "accountTheme": "inventage.v2",
   "authenticationFlows": [
     {
-      "id": "b1d0fb54-74a8-444a-9860-972a3434ec44",
       "alias": "browser2",
       "description": "browser based authentication",
       "providerId": "basic-flow",
       "topLevel": true,
       "builtIn": false,
       "authenticationExecutions": [
-        {
-          "authenticator": "auth-cookie",
-          "authenticatorFlow": false,
-          "requirement": "ALTERNATIVE",
-          "priority": 10,
-          "userSetupAllowed": false
-        },
         {
           "authenticator": "auth-spnego",
           "authenticatorFlow": false,
@@ -158,11 +149,17 @@
           "priority": 30,
           "flowAlias": "browser2 forms",
           "userSetupAllowed": false
+        },
+        {
+          "authenticatorFlow": true,
+          "flowAlias": "cookie & timeout",
+          "priority": 10,
+          "requirement": "ALTERNATIVE",
+          "userSetupAllowed": false
         }
       ]
     },
     {
-      "id": "01798868-5121-454c-b860-57d7c4cdd214",
       "alias": "browser2 Browser - Conditional OTP",
       "description": "Flow to determine if the OTP is required for the authentication",
       "providerId": "basic-flow",
@@ -186,7 +183,6 @@
       ]
     },
     {
-      "id": "5b9b4127-911f-4d5b-b164-0fe3c944487e",
       "alias": "browser2 forms",
       "description": "Username, password, otp and other auth forms.",
       "providerId": "basic-flow",
@@ -201,13 +197,6 @@
           "userSetupAllowed": false
         },
         {
-          "authenticator": "role-based-timeout-authenticator",
-          "authenticatorFlow": false,
-          "requirement": "REQUIRED",
-          "priority": 15,
-          "userSetupAllowed": false
-        },
-        {
           "authenticatorFlow": true,
           "requirement": "CONDITIONAL",
           "priority": 20,
@@ -215,6 +204,39 @@
           "userSetupAllowed": false
         }
       ]
+    },
+    {
+      "alias": "cookie & timeout",
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "authenticatorFlow": false,
+          "priority": 0,
+          "requirement": "REQUIRED",
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "role-based-timeout-authenticator",
+          "authenticatorConfig": "browserflow session and idle timeout config",
+          "authenticatorFlow": false,
+          "priority": 1,
+          "requirement": "REQUIRED",
+          "userSetupAllowed": false
+        }
+      ],
+      "builtIn": false,
+      "description": "",
+      "providerId": "basic-flow",
+      "topLevel": false
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "browserflow session and idle timeout config",
+      "config": {
+        "role-idle-timeouts": "offline_access:30",
+        "role-max-timeouts": "account/delete-account:120"
+      }
     }
   ],
   "browserFlow": "browser2",
@@ -225,7 +247,7 @@
       "description": "",
       "rootUrl": "",
       "adminUrl": "",
-      "baseUrl": "https://www.keycloak.org/app?url=http://localhost:8080&realm=example1&client=myclient",
+      "baseUrl": "https://www.keycloak.org/app?url=http://localhost:8080&realm=myrealm&client=myclient",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,

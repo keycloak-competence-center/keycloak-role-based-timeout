@@ -4,6 +4,7 @@
 !/.idea/codeStyles/
 !/.idea/jsLinters/
 !/.idea/runConfigurations/
+!/.idea/dataSources.xml
 !/.idea/codeStyleSettings.xml
 !/.idea/checkstyle-idea.xml
 !/.idea/encodings.xml
@@ -19,6 +20,7 @@ pom.xml.versionsBackup
 release.properties
 /docker-compose/src/main/resources/keycloak.specific.env
 /docker-compose/src/main/resources/secrets.env
+/extensions/keycloak-role-based-timeout/.flattened-pom.xml
 
 # Postgres data
 /docker-compose/postgres/volume/
@@ -26,3 +28,6 @@ release.properties
 Chart.lock
 helm/src/generated/**/*.tgz
 /config/src/main/resources/keycloak/setup/realm-ignored-*.json
+
+# asdf
+.tool-versions
