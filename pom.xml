@@ -35,6 +35,20 @@
         </developer>
     </developers>
 
+    <organization>
+        <name>Inventage AG</name>
+        <url>https://inventage.com/</url>
+    </organization>
+
+    <contributors>
+        <contributor>
+            <name>myky AG</name>
+            <url>https://www.myky.ch/</url>
+            <email>kontakt@myky.ch</email>
+            <roles><role>Sponsor</role></roles>
+        </contributor>
+    </contributors>
+
     <scm>
         <connection>scm:git:git://github.com/keycloak-competence-center/keycloak-role-based-timeout.git</connection>
         <developerConnection>scm:git:ssh://github.com/keycloak-competence-center/keycloak-role-based-timeout.git</developerConnection>

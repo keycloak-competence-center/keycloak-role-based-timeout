@@ -109,7 +109,8 @@ public class RoleBasedTimeoutEventListener implements EventListenerProvider {
                         .filter(exec -> !DISABLED.equals(exec.getRequirement()))
                         .anyMatch(exec -> config.getId().equals(exec.getAuthenticatorConfig())
                                 && RoleBasedTimeoutAuthenticatorFactory.PROVIDER_ID.equals(exec.getAuthenticator())))
-                .map(AuthenticatorConfigModel::getConfig);
+                .map(AuthenticatorConfigModel::getConfig)
+                .filter(config -> config == null || config.isEmpty());
     }
 
     @Override
