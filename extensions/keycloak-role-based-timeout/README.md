@@ -1,7 +1,7 @@
 Keycloak role based session timeout extension
 ===
 
-The keycloak-role-based-timeout extension allows configuring lower session timeout for users with specified roles as authentication step for browser flows and required action for token refreshes.
+The keycloak-role-based-timeout extension allows configuring lower session timeout for users with specified roles as authentication step for browser flows and hooks into the refresh token grant process to apply the timeouts also there.
 
 Both components are "fail-open"; if a configuration error occurs, it will allow the refresh or authentication step to proceed rather than locking users out.
 
@@ -12,8 +12,8 @@ To install the extension add the jar to the Keycloak server:
 cp target/keycloak-role-based-timeout-<VERSION>.jar <KEYCLOAK_HOME>/providers/
 ```
 
-Upon successful installation the authenticator "Role Based Timeout Authenticator" (`role-based-timeout-authenticator`) and the event listener `role-based-timeout-listener` are available.
-The authenticator step can be configured and the event listener uses the authenticator configuration. In case of multiple authenticator configurations for the realm, all are applied for the required action (thus the most restrictive configuration is used). Note, configurations from disabled authenticators are ignored.
+Upon successful installation the authenticator "Role Based Timeout Authenticator" (`role-based-timeout-authenticator`) is available.
+The authenticator step can be configured and the access token refresh uses the authenticator configuration. In case of multiple authenticator configurations for the realm, all are applied for the token refresh (thus the most restrictive configuration is used). Note, configurations from disabled authenticators are ignored.
 
 ### Setup of the authenticator step
 1. Navigate to **Authentication** -> the flow used by **Browser flow** in the Admin Console.
@@ -22,20 +22,12 @@ The authenticator step can be configured and the event listener uses the authent
 4. Add the Role Based Timeout Authenticator as second step in the subflow as "REQUIRED".
 5. Configure the role based timeout authenticator step.
 
-### Setup of the event listener
-1. Navigate to **Realm Settings** -> **Events** in the Admin Console.
-2. Add `role-based-timeout-listener` to the Event Listeners dropdown.
-
 ### Authenticator configuration
 
-The following snippet is an excerpt of a `realm.json` file using the  and required action
+The following snippet is an excerpt of a `realm.json` file using the `role-based-timeout-authenticator` authenticator.
 
 ```json
 {
-  "eventsListeners": [
-    "role-based-timeout-listener",
-    "jboss-logging"
-  ],
   "authenticationFlows": [
     {
       "alias": "browser2",

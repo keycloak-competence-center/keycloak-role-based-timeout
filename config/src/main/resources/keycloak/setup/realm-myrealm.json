@@ -7,10 +7,6 @@
   "adminEventsDetailsEnabled": true,
   "eventsEnabled": true,
   "eventsExpiration": 259200,
-  "eventsListeners": [
-    "role-based-timeout-listener",
-    "jboss-logging"
-  ],
   "enabledEventTypes": [
     "AUTHREQID_TO_TOKEN",
     "AUTHREQID_TO_TOKEN_ERROR",
@@ -295,6 +291,30 @@
         "phone",
         "offline_access",
         "microprofile-jwt"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "user1",
+      "emailVerified": true,
+      "email": "user1@idp.com",
+      "enabled": true,
+      "firstName": "user1",
+      "lastName": "user1",
+      "realmRoles": [
+        "offline_access"
+      ],
+      "clientRoles": {
+        "account": [
+          "delete-account"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user1..."
+        }
       ]
     }
   ]
