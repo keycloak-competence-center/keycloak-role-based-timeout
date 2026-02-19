@@ -20,7 +20,7 @@ The authenticator step can be configured and the access token refresh uses the a
 2. Create a basic flow subflow with requirement "ALTERNATIVE" replacing the "Cookie" execution step.
 3. Add the Cookie authenticator as first step in the subflow as "REQUIRED"
 4. Add the Role Based Timeout Authenticator as second step in the subflow as "REQUIRED".
-5. Configure the role based timeout authenticator step.
+5. Configure the role based timeout authenticator step. The format for roles and timeouts is 'rolename:seconds' for realm roles or 'clientid/rolename:seconds' for client roles.
 
 ### Authenticator configuration
 
@@ -95,7 +95,7 @@ The following snippet is an excerpt of a `realm.json` file using the `role-based
     {
       "alias": "browserflow session and idle timeout config",
       "config": {
-        "role-idle-timeouts": "offline_access:30",
+        "role-idle-timeouts": "offline_access:30##account/view-consent:40",
         "role-max-timeouts": "account/delete-account:120"
       }
     }

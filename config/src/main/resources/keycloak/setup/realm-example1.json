@@ -8,10 +8,6 @@
   "adminEventsDetailsEnabled": true,
   "eventsEnabled": true,
   "eventsExpiration": 259200,
-  "eventsListeners": [
-    "role-based-timeout-listener",
-    "jboss-logging"
-  ],
   "enabledEventTypes": [
     "AUTHREQID_TO_TOKEN",
     "AUTHREQID_TO_TOKEN_ERROR",

@@ -234,7 +234,7 @@
     {
       "alias": "browserflow session and idle timeout config",
       "config": {
-        "role-idle-timeouts": "offline_access:30",
+        "role-idle-timeouts": "offline_access:30##account/view-consent:40",
         "role-max-timeouts": "account/delete-account:120"
       }
     }

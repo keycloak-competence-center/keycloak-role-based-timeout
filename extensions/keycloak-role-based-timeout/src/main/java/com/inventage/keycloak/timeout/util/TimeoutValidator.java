@@ -62,16 +62,16 @@ public class TimeoutValidator {
      * Determines if the current activity duration exceeds the user's role-based limit.
      *
      * @param user             the user.
-     * @param iat              the latest known session token iat.
-     * @param currentTime      the current time.
-     * @param idleTimeouts     the idle timeout.
-     * @param maxTimeouts      the max timeout.
-     * @param sessionStartedAt session started at.
+     * @param iat              the latest known session token iat as epoch timestamp defining the latest user activity.
+     * @param currentTime      the current time as epoch timestamp.
+     * @param idleTimeouts     the map of roles to idle timeouts in seconds.
+     * @param maxTimeouts      the map of roles to max timeouts in seconds.
+     * @param sessionStartedAt session started at as epoch timestamp.
      * @return whether the user should be logged based on timeout limits.
      */
     public static boolean isTimeoutReached(UserModel user, long iat, int currentTime,
-                                           Map<String, Integer> idleTimeouts,
-                                           Map<String, Integer> maxTimeouts,
+                                           Map<String /* role */, Integer> idleTimeouts,
+                                           Map<String /* role */, Integer> maxTimeouts,
                                            int sessionStartedAt) {
 
         final int userIdleLimit = resolveMinTimeout(user, idleTimeouts);

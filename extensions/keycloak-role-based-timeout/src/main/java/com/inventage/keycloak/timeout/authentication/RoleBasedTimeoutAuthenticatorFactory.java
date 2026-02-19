@@ -37,7 +37,7 @@ public class RoleBasedTimeoutAuthenticatorFactory implements AuthenticatorFactor
         idleProp.setName(ROLE_IDLE_TIMEOUTS);
         idleProp.setLabel("Role Based IDLE Timeouts");
         idleProp.setHelpText("Terminates session if user is inactive for X seconds. " +
-                "Format: 'rolename:seconds'. " +
+                "Format: 'rolename:seconds' for realm roles or 'clientid/rolename:seconds' for client roles. " +
                 "Example: 'admin:900' (15 min idle).");
         idleProp.setType(ProviderConfigProperty.MULTIVALUED_STRING_TYPE);
         configProperties.add(idleProp);
@@ -47,7 +47,7 @@ public class RoleBasedTimeoutAuthenticatorFactory implements AuthenticatorFactor
         maxProp.setName(ROLE_MAX_TIMEOUTS);
         maxProp.setLabel("Role Based MAX Timeouts");
         maxProp.setHelpText("Terminates session strictly after X seconds (Absolute limit). " +
-                "Format: 'rolename:seconds'. " +
+                "Format: 'rolename:seconds' for realm roles or 'clientid/rolename:seconds' for client roles. " +
                 "Example: 'temp-user:3600' (1 hour max).");
         maxProp.setType(ProviderConfigProperty.MULTIVALUED_STRING_TYPE);
         configProperties.add(maxProp);
