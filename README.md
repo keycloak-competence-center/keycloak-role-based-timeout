@@ -5,7 +5,7 @@ This project provides a [Role Based Timeout Authenticator](./extensions/keycloak
 
 This repository is sponsored by [myky](https://www.myky.ch/).
 
-**Target Environment:** Keycloak ![Keycloak Version](https://img.shields.io/xml/path?xmlpath=%2F%2Fkeycloak.version&url=https%3A%2F%2Fraw.githubusercontent.com%2Fkeycloak-competence-center%2Fkeycloak-role-based-timeout%2Fmain%2Fpom.xml&label=Keycloak%20Version&color=blue)
+**Target Environment:** ![Keycloak Version](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fkeycloak-competence-center%2Fkeycloak-role-based-timeout%2Frefs%2Fheads%2Fmain%2Fpom.xml&query=%2F*%5Blocal-name()%3D'project'%5D%2F*%5Blocal-name()%3D'properties'%5D%2F*%5Blocal-name()%3D'keycloak.version'%5D%2Ftext()&label=Keycloak%20Version&color=blue)
 
 ### CI/CD Status
 
