@@ -111,7 +111,8 @@ public class RoleBasedTimeoutAuthenticator implements Authenticator {
 
         // Show the Info Page
         final Response challenge = context.form()
-                .setInfo("admin.session.timeout")
+                .setInfo("ext.admin.session.timeout")
+                .setAttribute("ext_roleBasedTimeout", true)
                 .createInfoPage();
         context.challenge(challenge);
     }

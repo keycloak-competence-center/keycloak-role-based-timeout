@@ -2,6 +2,8 @@ package com.inventage.keycloak.timeout.util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.keycloak.models.ClientModel;
+import org.keycloak.models.GroupModel;
 import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 
@@ -11,6 +13,7 @@ import java.util.stream.Stream;
 import static com.inventage.keycloak.timeout.util.TimeoutValidator.isTimeoutReached;
 import static com.inventage.keycloak.timeout.util.TimeoutValidator.parseConfig;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Stream.of;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,7 +59,7 @@ class TimeoutValidatorTest {
 
     @Test
     void testIdleTimeoutReached() {
-        when(user.getRoleMappingsStream()).thenReturn(Stream.of(adminRole));
+        when(user.getRoleMappingsStream()).thenReturn(of(adminRole));
         final Map<String, Integer> idleTimeouts = Map.of("admin", 900);
 
         final int now = 10000;
@@ -68,7 +71,7 @@ class TimeoutValidatorTest {
 
     @Test
     void testIdleTimeoutNotReached() {
-        when(user.getRoleMappingsStream()).thenReturn(Stream.of(adminRole));
+        when(user.getRoleMappingsStream()).thenReturn(of(adminRole));
         final Map<String, Integer> idleTimeouts = Map.of("admin", 900);
 
         final int now = 10000;
@@ -80,7 +83,7 @@ class TimeoutValidatorTest {
 
     @Test
     void testMaxTimeoutReached() {
-        when(user.getRoleMappingsStream()).thenReturn(Stream.of(userRole));
+        when(user.getRoleMappingsStream()).thenReturn(of(userRole));
         final Map<String, Integer> maxTimeouts = Map.of("user", 3600);
 
         final int now = 10000;
@@ -93,7 +96,7 @@ class TimeoutValidatorTest {
     @Test
     void testStrictestRoleResolution() {
         // User has both roles
-        when(user.getRoleMappingsStream()).thenReturn(Stream.of(adminRole, userRole));
+        when(user.getRoleMappingsStream()).thenReturn(of(adminRole, userRole));
 
         // Admin is stricter (600s) than User (3600s)
         final Map<String, Integer> idleTimeouts = Map.of(
@@ -113,7 +116,7 @@ class TimeoutValidatorTest {
         // User has a role not defined in config
         final RoleModel otherRole = mock(RoleModel.class);
         when(otherRole.getName()).thenReturn("guest");
-        when(user.getRoleMappingsStream()).thenReturn(Stream.of(otherRole));
+        when(user.getRoleMappingsStream()).thenReturn(of(otherRole));
 
         final Map<String, Integer> idleTimeouts = Map.of("admin", 600);
 
@@ -127,7 +130,7 @@ class TimeoutValidatorTest {
     @Test
     void testZeroIatFallback() {
         // Tests the logic: if (iat <= 0) { idleTime = currentTime - sessionStartedAt; }
-        when(user.getRoleMappingsStream()).thenReturn(Stream.of(adminRole));
+        when(user.getRoleMappingsStream()).thenReturn(of(adminRole));
         final Map<String, Integer> idleTimeouts = Map.of("admin", 500);
 
         final int now = 10000;
@@ -137,4 +140,61 @@ class TimeoutValidatorTest {
         final boolean result = isTimeoutReached(user, 0, now, idleTimeouts, emptyMap(), sessionStart);
         assertTrue(result, "Should use session start time if IAT is 0 or missing");
     }
+
+    @Test
+    void testRoleFromGroupMembership() {
+        final GroupModel managerGroup = mock(GroupModel.class);
+        when(user.getRoleMappingsStream()).thenReturn(Stream.empty());
+        when(user.getGroupsStream()).thenReturn(of(managerGroup));
+
+        when(managerGroup.getRoleMappingsStream()).thenReturn(of(adminRole));
+
+        // Config: Admin role has 500s timeout
+        final Map<String, Integer> idleTimeouts = Map.of("admin", 500);
+        final int now = 10000;
+
+        // Idle for 600s
+        final boolean result = isTimeoutReached(user, now - 600, now, idleTimeouts, emptyMap(), now - 1000);
+
+        assertTrue(result, "Should catch timeout from role inherited via Group membership");
+    }
+
+    @Test
+    void testRoleFromCompositeExpansion() {
+        final RoleModel superRole = mock(RoleModel.class);
+        when(superRole.getName()).thenReturn("super-role");
+        when(superRole.isComposite()).thenReturn(true);
+
+        when(user.getRoleMappingsStream()).thenReturn(Stream.of(superRole));
+        when(superRole.getCompositesStream()).thenReturn(Stream.of(adminRole));
+
+        final Map<String, Integer> idleTimeouts = Map.of("admin", 300);
+        final int now = 10000;
+
+        final boolean result = isTimeoutReached(user, now - 400, now, idleTimeouts, emptyMap(), now - 1000);
+
+        assertTrue(result, "Should catch timeout from child role inside a composite");
+    }
+
+    @Test
+    void testClientSpecificRoleTimeout() {
+        final RoleModel clientRole = mock(RoleModel.class);
+        final ClientModel client = mock(ClientModel.class);
+
+        when(clientRole.getName()).thenReturn("editor");
+        when(clientRole.isClientRole()).thenReturn(true);
+        when(clientRole.getContainer()).thenReturn(client);
+        when(client.getClientId()).thenReturn("my-app");
+
+        when(user.getRoleMappingsStream()).thenReturn(Stream.of(clientRole));
+
+        final Map<String, Integer> idleTimeouts = Map.of("my-app/editor", 120);
+        final int now = 10000;
+
+        // Idle for 150s
+        final boolean result = isTimeoutReached(user, now - 150, now, idleTimeouts, emptyMap(), now - 1000);
+
+        assertTrue(result, "Should resolve client-specific role using 'clientId/roleName' format");
+    }
+
 }

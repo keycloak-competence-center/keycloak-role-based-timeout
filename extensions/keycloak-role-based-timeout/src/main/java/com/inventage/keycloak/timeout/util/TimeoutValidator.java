@@ -2,11 +2,13 @@ package com.inventage.keycloak.timeout.util;
 
 import org.jboss.logging.Logger;
 import org.keycloak.models.ClientModel;
+import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserModel;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static java.lang.Integer.MAX_VALUE;
@@ -15,6 +17,7 @@ import static java.util.Arrays.stream;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Stream.empty;
+import static org.keycloak.models.utils.RoleUtils.getDeepUserRoleMappings;
 
 /**
  * Util class to parse the timeout configuration and check whether a timeout was reached.
@@ -74,8 +77,9 @@ public class TimeoutValidator {
                                            Map<String /* role */, Integer> maxTimeouts,
                                            int sessionStartedAt) {
 
-        final int userIdleLimit = resolveMinTimeout(user, idleTimeouts);
-        final int userMaxLimit = resolveMinTimeout(user, maxTimeouts);
+        final Set<RoleModel> roles = getDeepUserRoleMappings(user);
+        final int userIdleLimit = resolveMinTimeout(roles, idleTimeouts);
+        final int userMaxLimit = resolveMinTimeout(roles, maxTimeouts);
 
         // Max Session Check
         if (userMaxLimit != MAX_VALUE) {
@@ -114,13 +118,16 @@ public class TimeoutValidator {
     /**
      * Helper to find the shortest timeout among the user's roles.
      *
-     * @param user the user model.
+     * @param roles the set of roles.
      * @param timeouts the role to timeout map.
      * @return the timeout or fallback to max value.
      */
-    private static int resolveMinTimeout(UserModel user, Map<String, Integer> timeouts) {
-        if (timeouts.isEmpty()) return MAX_VALUE;
-        return user.getRoleMappingsStream()
+    private static int resolveMinTimeout(Set<RoleModel> roles, Map<String, Integer> timeouts) {
+        if (timeouts.isEmpty()) {
+            return MAX_VALUE;
+        }
+
+        return roles.stream()
                 .map(role -> {
                     if (role.getContainer() instanceof ClientModel client)
                         return client.getClientId() + "/" + role.getName();

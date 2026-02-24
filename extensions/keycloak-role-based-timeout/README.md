@@ -5,6 +5,9 @@ The keycloak-role-based-timeout extension allows configuring lower session timeo
 
 Both components are "fail-open"; if a configuration error occurs, it will allow the refresh or authentication step to proceed rather than locking users out.
 
+If a timeout does happen during an authentication flow, the info page is called with `info` set to message key `ext.admin.session.keycloak` with attribute `ext_roleBasedTimeout` set to `true`. 
+This allows for showing the info page with the default message `For your security, your session has ended. Please log in again to continue.`, a custom message or using the attribute to handle the page specially in a custom info template.
+
 ### Installation
 To install the extension add the jar to the Keycloak server:
 
