@@ -9,10 +9,63 @@ If a timeout does happen during an authentication flow, the info page is called 
 This allows for showing the info page with the default message `For your security, your session has ended. Please log in again to continue.`, a custom message or using the attribute to handle the page specially in a custom info template.
 
 ### Installation
-To install the extension add the jar to the Keycloak server:
+
+To install the extension, add the jar to the Keycloak server's `providers` directory.
+
+#### Prerequisites
+
+- Java 21 or later (only needed when building from source)
+
+#### From Maven Central
+
+The extension is published to Maven Central. Download the jar directly:
 
 ```shell
-cp target/keycloak-role-based-timeout-<VERSION>.jar <KEYCLOAK_HOME>/providers/
+curl -O https://repo.maven.apache.org/maven2/com/inventage/keycloak/role-based-timeout/keycloak-role-based-timeout/<VERSION>/keycloak-role-based-timeout-<VERSION>.jar
+```
+
+Or add it as a dependency in your build:
+
+```xml
+<dependency>
+    <groupId>com.inventage.keycloak.role-based-timeout</groupId>
+    <artifactId>keycloak-role-based-timeout</artifactId>
+    <version>VERSION</version>
+</dependency>
+```
+
+Copy the jar to the Keycloak providers directory:
+
+```shell
+cp keycloak-role-based-timeout-<VERSION>.jar <KEYCLOAK_HOME>/providers/
+```
+
+#### Building from source
+
+Clone the repository and build the extension module using the included Maven wrapper:
+
+```shell
+./mvnw clean package -pl extensions/keycloak-role-based-timeout -am
+```
+
+This builds the jar at `extensions/keycloak-role-based-timeout/target/keycloak-role-based-timeout-<VERSION>.jar`. Copy it to the Keycloak providers directory:
+
+```shell
+cp extensions/keycloak-role-based-timeout/target/keycloak-role-based-timeout-<VERSION>.jar <KEYCLOAK_HOME>/providers/
+```
+
+#### Docker
+
+When building a custom Keycloak Docker image, copy the jar into the providers directory in your Dockerfile:
+
+```dockerfile
+COPY keycloak-role-based-timeout-<VERSION>.jar /opt/keycloak/providers/
+```
+
+After adding the provider, rebuild Keycloak to pick up the extension:
+
+```shell
+/opt/keycloak/bin/kc.sh build
 ```
 
 Upon successful installation the authenticator "Role Based Timeout Authenticator" (`role-based-timeout-authenticator`) is available.
