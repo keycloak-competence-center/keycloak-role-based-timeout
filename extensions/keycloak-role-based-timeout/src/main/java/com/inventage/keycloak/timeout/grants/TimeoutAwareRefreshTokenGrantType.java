@@ -2,11 +2,14 @@ package com.inventage.keycloak.timeout.grants;
 
 import com.inventage.keycloak.timeout.authentication.RoleBasedTimeoutAuthenticator;
 import com.inventage.keycloak.timeout.authentication.RoleBasedTimeoutAuthenticatorFactory;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.keycloak.OAuthErrorException;
 import org.keycloak.events.Details;
 import org.keycloak.jose.jws.JWSInput;
+import org.keycloak.jose.jws.JWSInputException;
+import org.keycloak.services.CorsErrorResponseException;
 import org.keycloak.models.AuthenticatorConfigModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
@@ -14,7 +17,6 @@ import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.protocol.oidc.grants.RefreshTokenGrantType;
 import org.keycloak.representations.AccessToken;
-import org.keycloak.services.CorsErrorResponseException;
 
 import java.util.Map;
 import java.util.stream.Stream;
@@ -56,7 +58,13 @@ public class TimeoutAwareRefreshTokenGrantType extends RefreshTokenGrantType {
                 return;
             }
 
-            final JWSInput input = new JWSInput(refreshTokenString);
+            final JWSInput input;
+            try {
+                input = new JWSInput(refreshTokenString);
+            } catch (JWSInputException e) {
+                // Malformed token — super.process() will reject it.
+                return;
+            }
             final AccessToken token = input.readJsonContent(AccessToken.class);
 
             final RealmModel realm = session.getContext().getRealm();
@@ -97,6 +105,9 @@ public class TimeoutAwareRefreshTokenGrantType extends RefreshTokenGrantType {
                         Response.Status.BAD_REQUEST
                 );
             }
+        }
+        catch (WebApplicationException e) {
+            throw e;
         }
         catch (Exception e) {
             logger.warn("Failed to check timeout during refresh event", e);
